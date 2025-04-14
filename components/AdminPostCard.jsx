@@ -1,7 +1,10 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
 
-const AdminPostCard = ({ recipe, onView, onEdit }) => {
+const AdminPostCard = ({ recipe, onView }) => {
+  const router = useRouter();
+
   return (
     <View style={styles.cardContainer}>
       <Image source={{ uri: recipe.image }} style={styles.recipeImage} />
@@ -16,7 +19,10 @@ const AdminPostCard = ({ recipe, onView, onEdit }) => {
         <TouchableOpacity style={styles.viewButton} onPress={() => onView(recipe)}>
           <Text style={styles.buttonText}>View</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.editButton} onPress={() => onEdit(recipe)}>
+        <TouchableOpacity
+          style={styles.editButton}
+          onPress={() => router.push(`/adminEditPost?id=${recipe.id}`)}
+        >
           <Text style={styles.buttonText}>Edit</Text>
         </TouchableOpacity>
       </View>
@@ -36,7 +42,6 @@ const styles = StyleSheet.create({
     padding: 10,
     alignItems: 'center',
     elevation: 2,
-    // boxShadow is not supported in React Native; use elevation (Android) or shadow props (iOS)
   },
   recipeImage: {
     width: 60,

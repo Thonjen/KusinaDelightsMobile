@@ -10,32 +10,69 @@ import {
   Alert,
   Platform,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { Picker } from '@react-native-picker/picker';
 import RecipeDetailHeader from '../components/Header'; // Shared header component
 import AdminBottomNavbar from '../components/AdminBottomNavbar';
+import SaveAlert from '../components/alerts/SaveAlert';
+import CancelAlert from '../components/alerts/CancelAlert';
+import RemoveAlert from '../components/alerts/RemoveAlert';
 import * as database from '../database/database';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const AdminCreatePost = () => {
+const AdminEditPost = () => {
   const router = useRouter();
+  const { id } = useLocalSearchParams(); // Get recipe id from URL query
+  const [currentRecipe, setCurrentRecipe] = useState(null);
 
-  // Form states
+  // Form state variables for editing
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [ingredients, setIngredients] = useState('');
   const [instructions, setInstructions] = useState('');
-  const [imageUri, setImageUri] = useState(null); // For preview
+  const [imageUri, setImageUri] = useState(null);
   const [prepTime, setPrepTime] = useState('');
   const [cookingTime, setCookingTime] = useState('');
   const [servings, setServings] = useState('');
   const [difficulty, setDifficulty] = useState('Easy');
-  // New state: Youtube Tutorial (optional)
   const [youtubeTutorial, setYoutubeTutorial] = useState('');
   const [currentUser, setCurrentUser] = useState(null);
 
-  // Retrieve current user
+  // Alert visibility states
+  const [saveAlertVisible, setSaveAlertVisible] = useState(false);
+  const [cancelAlertVisible, setCancelAlertVisible] = useState(false);
+  const [removeAlertVisible, setRemoveAlertVisible] = useState(false);
+
+  // Fetch the current recipe data
+  useEffect(() => {
+    const fetchRecipe = async () => {
+      try {
+        const recipes = await database.getRecipes();
+        const foundRecipe = recipes.find((rec) => rec.id === id);
+        if (foundRecipe) {
+          setCurrentRecipe(foundRecipe);
+          // Prepopulate form with existing recipe details:
+          setTitle(foundRecipe.name);
+          setDescription(foundRecipe.description);
+          setIngredients(foundRecipe.ingredients);
+          setInstructions(foundRecipe.instructions);
+          setImageUri(foundRecipe.image);
+          setPrepTime(foundRecipe.preparation);
+          setCookingTime(foundRecipe.cookingTime);
+          setServings(foundRecipe.servings);
+          setDifficulty(foundRecipe.difficulty);
+          setYoutubeTutorial(foundRecipe.youtubeTutorial || '');
+        }
+      } catch (error) {
+        console.error('Error fetching recipe for editing:', error);
+      }
+    };
+
+    if (id) fetchRecipe();
+  }, [id]);
+
+  // Retrieve current user (to pass as author if needed)
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
@@ -50,7 +87,7 @@ const AdminCreatePost = () => {
     fetchCurrentUser();
   }, []);
 
-  // Handle opening camera or gallery
+  // Functions for image selection
   const pickImageFromCamera = async () => {
     try {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -91,15 +128,15 @@ const AdminCreatePost = () => {
     }
   };
 
-  const handleCreate = async () => {
-    // Validate required fields
+  // Actual save function (called from alert confirmation)
+  const onSaveConfirm = async () => {
     if (!title || !description || !ingredients || !instructions || !imageUri) {
       Alert.alert('Missing fields', 'Please fill in all required fields.');
       return;
     }
     try {
-      // Include the author (current user admin username)
-      const newRecipe = await database.createRecipe({
+      const updatedRecipe = {
+        ...currentRecipe,
         name: title,
         description,
         ingredients,
@@ -109,26 +146,76 @@ const AdminCreatePost = () => {
         cookingTime,
         servings,
         difficulty,
-        author: currentUser?.username || 'Admin',
         youtubeTutorial: youtubeTutorial || null,
-      });
-      Alert.alert('Recipe Created', 'Your recipe has been created successfully!');
-      // Navigate back to AdminPosts so the new post appears
+        author: currentUser?.username || currentRecipe.author || 'Admin',
+      };
+      await database.updateRecipe(updatedRecipe);
+      Alert.alert('Recipe Updated', 'Your recipe has been updated successfully!');
+      setSaveAlertVisible(false);
       router.push('/adminPosts');
     } catch (error) {
-      console.error('Error creating recipe:', error);
-      Alert.alert('Error', 'An error occurred while creating the recipe.');
+      console.error('Error updating recipe:', error);
+      Alert.alert('Error', 'An error occurred while updating the recipe.');
+      setSaveAlertVisible(false);
     }
   };
 
-  const handleCancel = () => {
+  // Actual cancel function (discard changes)
+  const onCancelDiscard = () => {
+    // Optionally, reset form fields to original values
+    setTitle(currentRecipe.name);
+    setDescription(currentRecipe.description);
+    setIngredients(currentRecipe.ingredients);
+    setInstructions(currentRecipe.instructions);
+    setImageUri(currentRecipe.image);
+    setPrepTime(currentRecipe.preparation);
+    setCookingTime(currentRecipe.cookingTime);
+    setServings(currentRecipe.servings);
+    setDifficulty(currentRecipe.difficulty);
+    setYoutubeTutorial(currentRecipe.youtubeTutorial || '');
+    setCancelAlertVisible(false);
     router.push('/adminPosts');
   };
+
+  // Actual remove function: remove recipe from storage
+  const onRemoveConfirm = async () => {
+    try {
+      await database.removeRecipe(currentRecipe.id);
+      Alert.alert('Recipe Removed', 'Your recipe has been removed successfully!');
+      setRemoveAlertVisible(false);
+      router.push('/adminPosts');
+    } catch (error) {
+      console.error('Error removing recipe:', error);
+      Alert.alert('Error', 'An error occurred while removing the recipe.');
+      setRemoveAlertVisible(false);
+    }
+  };
+
+  // Handlers to show alerts
+  const handleSavePress = () => {
+    setSaveAlertVisible(true);
+  };
+
+  const handleCancelPress = () => {
+    setCancelAlertVisible(true);
+  };
+
+  const handleRemovePress = () => {
+    setRemoveAlertVisible(true);
+  };
+
+  if (!currentRecipe) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text>Loading recipe for editing...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       {/* Shared Header */}
-      <RecipeDetailHeader headerTitle="Create Post" />
+      <RecipeDetailHeader headerTitle="Edit Post" />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Recipe Title */}
@@ -252,24 +339,44 @@ const AdminCreatePost = () => {
           onChangeText={setYoutubeTutorial}
         />
 
-        {/* Create and Cancel Buttons */}
+        {/* Buttons: Save, Cancel, and Remove */}
         <View style={styles.buttonRow}>
-          <TouchableOpacity style={styles.createButton} onPress={handleCreate}>
-            <Text style={styles.buttonText}>Create</Text>
+          <TouchableOpacity style={styles.saveButton} onPress={handleSavePress}>
+            <Text style={styles.buttonText}>Save</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
+          <TouchableOpacity style={styles.cancelButton} onPress={handleCancelPress}>
             <Text style={styles.buttonText}>Cancel</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.removeButton} onPress={handleRemovePress}>
+            <Text style={styles.buttonText}>Remove</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
 
       {/* Admin Bottom Navbar */}
       <AdminBottomNavbar />
+
+      {/* Alert Components */}
+      <SaveAlert
+        visible={saveAlertVisible}
+        onCancel={() => setSaveAlertVisible(false)}
+        onConfirm={onSaveConfirm}
+      />
+      <CancelAlert
+        visible={cancelAlertVisible}
+        onKeepEditing={() => setCancelAlertVisible(false)}
+        onDiscard={onCancelDiscard}
+      />
+      <RemoveAlert
+        visible={removeAlertVisible}
+        onCancel={() => setRemoveAlertVisible(false)}
+        onConfirm={onRemoveConfirm}
+      />
     </View>
   );
 };
 
-export default AdminCreatePost;
+export default AdminEditPost;
 
 const styles = StyleSheet.create({
   container: {
@@ -360,13 +467,13 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     justifyContent: 'space-between',
   },
-  createButton: {
+  saveButton: {
     flex: 1,
     backgroundColor: '#AEF6C7',
     padding: 16,
     borderRadius: 10,
     alignItems: 'center',
-    marginRight: 8,
+    marginRight: 4,
   },
   cancelButton: {
     flex: 1,
@@ -374,11 +481,24 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 10,
     alignItems: 'center',
-    marginLeft: 8,
+    marginHorizontal: 4,
+  },
+  removeButton: {
+    flex: 1,
+    backgroundColor: 'red',
+    padding: 16,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginLeft: 4,
   },
   buttonText: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#333',
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

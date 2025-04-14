@@ -123,4 +123,30 @@ export const getRecipes = async () => {
   }
 };
 
+// Update an existing recipe (by id)
+export const updateRecipe = async (updatedRecipe) => {
+  try {
+    const recipes = (await getData(RECIPES_KEY)) || [];
+    const updatedRecipes = recipes.map((recipe) =>
+      recipe.id === updatedRecipe.id ? updatedRecipe : recipe
+    );
+    await storeData(RECIPES_KEY, updatedRecipes);
+    return updatedRecipes;
+  } catch (error) {
+    console.error('Error updating recipe', error);
+  }
+};
+
+// Remove a recipe by id
+export const removeRecipe = async (recipeId) => {
+  try {
+    const recipes = (await getData(RECIPES_KEY)) || [];
+    const updatedRecipes = recipes.filter((recipe) => recipe.id !== recipeId);
+    await storeData(RECIPES_KEY, updatedRecipes);
+    return updatedRecipes;
+  } catch (error) {
+    console.error('Error removing recipe', error);
+  }
+};
+
 // Export more functions as needed...
