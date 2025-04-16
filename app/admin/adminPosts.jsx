@@ -8,19 +8,19 @@ import {
   Platform,
   Alert,
 } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
 import { useRouter } from 'expo-router';
 import * as AsyncStorage from '@react-native-async-storage/async-storage';
-import AdminPostCard from '../components/AdminPostCard';
-import AdminBottomNavbar from '../components/AdminBottomNavbar';
-import RecipeDetailHeader from '../components/HeaderCenter';
-import * as database from '../database/database';
+import AdminPostCard from '../../components/AdminPostCard';
+import AdminBottomNavbar from '../../components/AdminBottomNavbar';
+import RecipeDetailHeader from '../../components/HeaderCenter';
+import * as database from '../../database/database';
+import Pagination from '../../components/Pagination'; // Import Pagination
 
 const AdminPosts = () => {
   const router = useRouter();
   const [recipes, setRecipes] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10); // Default posts per page
+  const [pageSize, setPageSize] = useState(5); // Default posts per page
 
   useEffect(() => {
     const fetchRecipes = async () => {
@@ -66,7 +66,7 @@ const AdminPosts = () => {
   };
 
   const handleCreateRecipe = () => {
-    router.push('/adminCreatePost');
+    router.push('/admin/adminCreatePost');
   };
 
   return (
@@ -85,43 +85,14 @@ const AdminPosts = () => {
         ))}
 
         {/* Pagination Controls */}
-        <View style={styles.paginationContainer}>
-          <Text style={styles.perPageLabel}>Posts per page</Text>
-          <View style={styles.pickerContainer}>
-            <Picker
-              selectedValue={pageSize}
-              style={styles.picker}
-              onValueChange={handlePageSizeChange}
-            >
-              <Picker.Item label="5" value={5} />
-              <Picker.Item label="10" value={10} />
-              <Picker.Item label="15" value={15} />
-              <Picker.Item label="20" value={20} />
-            </Picker>
-          </View>
-          <View style={styles.navButtons}>
-            <TouchableOpacity
-              style={[styles.navButton, currentPage === 1 && styles.disabledButton]}
-              onPress={handlePrevPage}
-              disabled={currentPage === 1}
-            >
-              <Text style={styles.navButtonText}>Back</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.navButton,
-                currentPage === totalPages && styles.disabledButton,
-              ]}
-              onPress={handleNextPage}
-              disabled={currentPage === totalPages}
-            >
-              <Text style={styles.navButtonText}>Next</Text>
-            </TouchableOpacity>
-          </View>
-          <Text style={styles.paginationInfo}>
-            Page {currentPage} of {totalPages}
-          </Text>
-        </View>
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          pageSize={pageSize}
+          onPageSizeChange={handlePageSizeChange}
+          onNextPage={handleNextPage}
+          onPrevPage={handlePrevPage}
+        />
 
         {/* Create Recipe Button */}
         <TouchableOpacity style={styles.createRecipeButton} onPress={handleCreateRecipe}>
@@ -142,54 +113,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5F5F5',
   },
   scrollContent: {
-    paddingBottom: 80,
+    paddingBottom: 40,
     paddingTop: 20,
-  },
-  paginationContainer: {
-    marginVertical: 12,
-    marginHorizontal: 16,
-    backgroundColor: '#FFF',
-    borderRadius: 10,
-    padding: 12,
-    elevation: 1,
-  },
-  perPageLabel: {
-    fontSize: 14,
-    marginBottom: 6,
-    color: '#333',
-  },
-  pickerContainer: {
-    backgroundColor: '#F8D64E',
-    borderRadius: 10,
-    marginBottom: 12,
-  },
-  picker: {
-    height: 40,
-    color: '#000',
-  },
-  navButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  navButton: {
-    backgroundColor: '#F8D64E',
-    paddingVertical: 8,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-  },
-  disabledButton: {
-    opacity: 0.3,
-  },
-  navButtonText: {
-    color: '#FFF',
-    fontWeight: 'bold',
-  },
-  paginationInfo: {
-    textAlign: 'center',
-    marginTop: 6,
-    fontSize: 14,
-    color: '#333',
   },
   createRecipeButton: {
     backgroundColor: '#FFA500',

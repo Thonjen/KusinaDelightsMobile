@@ -13,9 +13,9 @@ import {
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { Picker } from '@react-native-picker/picker';
-import RecipeDetailHeader from '../components/Header'; // Shared header component
-import AdminBottomNavbar from '../components/AdminBottomNavbar';
-import * as database from '../database/database';
+import RecipeDetailHeader from '../../components/HeaderCenter'; // Shared header component
+import AdminBottomNavbar from '../../components/AdminBottomNavbar';
+import * as database from '../../database/database';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const AdminCreatePost = () => {
@@ -114,7 +114,7 @@ const AdminCreatePost = () => {
       });
       Alert.alert('Recipe Created', 'Your recipe has been created successfully!');
       // Navigate back to AdminPosts so the new post appears
-      router.push('/adminPosts');
+      router.push('/admin/adminPosts');
     } catch (error) {
       console.error('Error creating recipe:', error);
       Alert.alert('Error', 'An error occurred while creating the recipe.');
@@ -122,7 +122,7 @@ const AdminCreatePost = () => {
   };
 
   const handleCancel = () => {
-    router.push('/adminPosts');
+    router.push('/admin/adminPosts');
   };
 
   return (
@@ -310,7 +310,7 @@ const styles = StyleSheet.create({
   },
   imagePreviewContainer: {
     flex: 1,
-    height: 150,
+    height: 200,
     backgroundColor: '#FFF',
     borderWidth: 1,
     borderColor: '#ccc',

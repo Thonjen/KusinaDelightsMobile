@@ -4,7 +4,7 @@ import LayoutSelection from '../components/LayoutSelection';
 import { LayoutContext } from '../contexts/LayoutContext';
 import { useRouter } from 'expo-router';
 import BottomNavbar from '../components/BottomNavbar';
-import SettingsHeader from '../components/SettingsHeader';
+import HeaderCenter from '../components/HeaderCenter';  // Use HeaderCenter instead of SettingsHeader
 
 const Settings = () => {
   const [modalVisible, setModalVisible] = useState(false);
@@ -21,8 +21,8 @@ const Settings = () => {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <SettingsHeader headerTitle="Settings" />
+      {/* Header using HeaderCenter component */}
+      <HeaderCenter headerTitle="Settings" />
 
       {/* Main Content */}
       <View style={styles.content}>

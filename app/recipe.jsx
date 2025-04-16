@@ -1,25 +1,14 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Animated,
-  Image,
-  TouchableOpacity,
-  TextInput,
-  Platform,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { View, Text, StyleSheet, Animated, TextInput, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-// Use named imports for the database
 import * as database from '../database/database';
 import RecipeCard from '../components/RecipeCard';
 import MediumRecipeCard from '../components/MediumRecipeCard';
 import ListRecipeCard from '../components/ListRecipeCard';
 import BottomNavbar from '../components/BottomNavbar';
 import { LayoutContext } from '../contexts/LayoutContext';
-import ProfileButton from '../components/ProfileButton';
+import AppHeader from '../components/AppHeader';
 
 const Recipe = () => {
   const router = useRouter();
@@ -29,12 +18,10 @@ const Recipe = () => {
   const scrollY = useRef(new Animated.Value(0)).current;
   const { layout } = useContext(LayoutContext);
 
-  // Fetch recipes from the database and sort so that the newest appear first.
   useEffect(() => {
     const fetchData = async () => {
       try {
         const data = await database.getRecipes();
-        // Reverse array to display the newest recipes first
         const sortedRecipes = [...data].reverse();
         const visibleRecipes = sortedRecipes.filter((recipe) => !recipe.hidden);
         setRecipes(visibleRecipes);
@@ -45,7 +32,6 @@ const Recipe = () => {
     fetchData();
   }, []);
 
-  // Retrieve the current user from AsyncStorage
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
@@ -66,7 +52,6 @@ const Recipe = () => {
     extrapolate: 'clamp',
   });
 
-  // Filter recipes based on the search query
   const filteredRecipes = recipes.filter((r) =>
     r.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -77,39 +62,18 @@ const Recipe = () => {
 
   return (
     <View style={styles.container}>
-      {/* Animated Header with ProfileButton Component */}
-      <Animated.View style={[styles.header, { transform: [{ scale: headerScale }] }]}>
-        <View style={styles.headerContent}>
-          <View style={styles.logoContainer}>
-            <Image
-              source={require('../assets/images/KusinaDelightsLogo.png')}
-              style={styles.logo}
-              resizeMode="contain"
-            />
-            <Text style={styles.headerTitle}>Recent Recipes</Text>
-          </View>
-          <ProfileButton 
-            currentUser={currentUser}
-            onPress={() => router.push('/profile')}
-          />
-        </View>
-      </Animated.View>
+      <AppHeader 
+        headerTitle="Recent Recipes"
+        currentUser={currentUser}
+        onProfilePress={() => router.push('/profile')}
+        animatedStyle={{ transform: [{ scale: headerScale }] }}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+      />
 
-      {/* Search Bar */}
-      <View style={styles.searchRow}>
-        <TextInput
-          style={styles.searchBar}
-          placeholder="Search Recent Recipes..."
-          placeholderTextColor="#888"
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
-      </View>
-
-      {/* Scrollable List of Recipes */}
       <Animated.ScrollView
         style={styles.scrollContainer}
-        contentContainerStyle={{ paddingTop: 5 }}
+        contentContainerStyle={styles.scrollContent}
         bounces={true}
         overScrollMode="always"
         onScroll={Animated.event(
@@ -137,7 +101,6 @@ const Recipe = () => {
         )}
       </Animated.ScrollView>
 
-      {/* Bottom Navbar */}
       <BottomNavbar />
     </View>
   );
@@ -150,54 +113,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F5F5F5',
   },
-  header: {
-    backgroundColor: '#F8D64E',
-    paddingHorizontal: 16,
-    paddingTop: 10,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  logoContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  logo: {
-    width: 50,
-    height: 50,
-    marginRight: 8,
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-  },
-  searchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    backgroundColor: '#F8D64E',
-    justifyContent: 'center',
-    paddingBottom: 10,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    elevation: 4,
-    boxShadow: "0px 2px 1px rgba(0,0,0,0.2)",
-  },
-  searchBar: {
-    flex: 1,
-    backgroundColor: '#FFF',
-    borderRadius: 25,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    fontSize: 16,
-    elevation: 2,
-  },
   scrollContainer: {
     flex: 1,
     paddingHorizontal: 16,
+  },
+  scrollContent: {
+    paddingBottom: 90, // Updated paddingBottom here as well
   },
   sectionTitle: {
     fontSize: 20,

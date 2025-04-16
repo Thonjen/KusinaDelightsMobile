@@ -11,8 +11,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import RecipeDetailHeader from '../components/HeaderCenter'; // Shared header component
-import AdminBottomNavbar from '../components/AdminBottomNavbar';
+import RecipeDetailHeader from '../../components/HeaderCenter'; // Shared header component
+import AdminBottomNavbar from '../../components/AdminBottomNavbar';
 
 const AdminProfile = () => {
   const router = useRouter();

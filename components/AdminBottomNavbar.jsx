@@ -41,10 +41,10 @@ const AdminBottomNavbar = () => {
 
   // Define admin navbar tabs
   const tabs = [
-    { route: '/adminProfile', label: 'Home', icon: 'home' },
-    { route: '/adminPosts', label: 'Posts', icon: 'document-text' },
-    { route: '/adminReviews', label: 'Reviews', icon: 'star' },
-    { route: '/adminUsers', label: 'Users', icon: 'people' },
+    { route: '/admin/adminProfile', label: 'Home', icon: 'home' },
+    { route: '/admin/adminPosts', label: 'Posts', icon: 'document-text' },
+    { route: '/admin/adminReviews', label: 'Reviews', icon: 'star' },
+    { route: '/admin/adminUsers', label: 'Users', icon: 'people' },
   ];
 
   const handleTabPress = (tab) => {
@@ -111,7 +111,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8D64E',
     borderTopLeftRadius: 50,
     borderTopRightRadius: 50,
-    elevation: 4,
   },
   tabRow: {
     flex: 1,

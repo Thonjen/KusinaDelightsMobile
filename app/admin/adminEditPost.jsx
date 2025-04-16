@@ -13,12 +13,12 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { Picker } from '@react-native-picker/picker';
-import RecipeDetailHeader from '../components/Header'; // Shared header component
-import AdminBottomNavbar from '../components/AdminBottomNavbar';
-import SaveAlert from '../components/alerts/SaveAlert';
-import CancelAlert from '../components/alerts/CancelAlert';
-import RemoveAlert from '../components/alerts/RemoveAlert';
-import * as database from '../database/database';
+import RecipeDetailHeader from '../../components/Header'; // Shared header component
+import AdminBottomNavbar from '../../components/AdminBottomNavbar';
+import SaveAlert from '../../components/alerts/SaveAlert';
+import CancelAlert from '../../components/alerts/CancelAlert';
+import RemoveAlert from '../../components/alerts/RemoveAlert';
+import * as database from '../../database/database';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const AdminEditPost = () => {
@@ -174,7 +174,7 @@ const AdminEditPost = () => {
     setDifficulty(currentRecipe.difficulty);
     setYoutubeTutorial(currentRecipe.youtubeTutorial || '');
     setCancelAlertVisible(false);
-    router.push('/adminPosts');
+    router.push('/admin/adminPosts');
   };
 
   // Actual remove function: remove recipe from storage
@@ -183,7 +183,7 @@ const AdminEditPost = () => {
       await database.removeRecipe(currentRecipe.id);
       Alert.alert('Recipe Removed', 'Your recipe has been removed successfully!');
       setRemoveAlertVisible(false);
-      router.push('/adminPosts');
+      router.push('/admin/adminPosts');
     } catch (error) {
       console.error('Error removing recipe:', error);
       Alert.alert('Error', 'An error occurred while removing the recipe.');
@@ -417,7 +417,7 @@ const styles = StyleSheet.create({
   },
   imagePreviewContainer: {
     flex: 1,
-    height: 150,
+    height: 200,
     backgroundColor: '#FFF',
     borderWidth: 1,
     borderColor: '#ccc',

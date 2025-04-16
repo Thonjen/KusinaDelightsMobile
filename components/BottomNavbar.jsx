@@ -36,6 +36,7 @@ const BottomNavbar = () => {
   }, [pathname]);
 
   const isActive = (route) => pathname === route;
+
   const tabs = [
     { route: '/home', label: 'Home', icon: 'home' },
     { route: '/recipe', label: 'Recipe', icon: 'book' },
@@ -54,6 +55,7 @@ const BottomNavbar = () => {
         {tabs.map((tab, index) => {
           const active = isActive(tab.route);
           const iconColor = 'black';
+
           return (
             <TouchableOpacity
               key={index}
@@ -95,8 +97,12 @@ const NAVBAR_HEIGHT = 70;
 const styles = StyleSheet.create({
   navbarContainer: {
     height: NAVBAR_HEIGHT,
-    position: 'relative',
+    position: 'absolute', // <-- fix here
+    bottom: 0,
+    left: 0,
+    right: 0,
     backgroundColor: 'transparent',
+    zIndex: 10, // ensure it stays above content
   },
   navbarBackground: {
     position: 'absolute',
@@ -107,7 +113,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8D64E',
     borderTopLeftRadius: 50,
     borderTopRightRadius: 50,
-    elevation: 4,
   },
   tabRow: {
     flex: 1,
