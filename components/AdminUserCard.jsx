@@ -1,32 +1,45 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
 
-const AdminPostCard = ({ recipe, onView }) => {
-  const router = useRouter();
+const AdminUserCard = ({ user, onView, onEdit }) => {
+  const avatarUri = user.profileImage;
 
   return (
     <View style={styles.cardContainer}>
-      <Image source={{ uri: recipe.image }} style={styles.recipeImage} />
-      <View style={styles.recipeInfo}>
-        <Text style={styles.recipeTitle}>{recipe.name}</Text>
-        <Text style={styles.recipeAuthor}>By {recipe.author}</Text>
-        <Text style={styles.recipeDescription} numberOfLines={1}>
-          {recipe.description}
+      <View style={styles.avatarContainer}>
+        {avatarUri ? (
+          <Image source={{ uri: avatarUri }} style={styles.avatar} />
+        ) : (
+          <Ionicons name="person-circle-outline" size={60} color="#888" />
+        )}
+      </View>
+      <View style={styles.userInfo}>
+        <Text style={styles.userName}>{user.username}</Text>
+        <Text style={styles.userEmail}>{user.email}</Text>
+        <Text style={styles.userDate}>
+          Joined: {user.dateJoined
+            ? new Date(user.dateJoined).toLocaleDateString()
+            : 'N/A'}
         </Text>
       </View>
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={[styles.button, styles.viewButton]}
-          onPress={() => onView(recipe)}
+          onPress={() => onView(user)}
         >
           <Ionicons name="eye-outline" size={18} color="#FFF" />
           <Text style={styles.buttonText}>View</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.button, styles.editButton]}
-          onPress={() => router.push(`/admin/adminEditPost?id=${recipe.id}`)}
+          onPress={() => onEdit(user)}
         >
           <Ionicons name="create-outline" size={18} color="#FFF" />
           <Text style={styles.buttonText}>Edit</Text>
@@ -36,7 +49,7 @@ const AdminPostCard = ({ recipe, onView }) => {
   );
 };
 
-export default AdminPostCard;
+export default AdminUserCard;
 
 const styles = StyleSheet.create({
   cardContainer: {
@@ -45,37 +58,39 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginVertical: 6,
     marginHorizontal: 16,
-    padding: 10,
+    padding: 12,
     alignItems: 'center',
     elevation: 2,
   },
-  recipeImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 8,
-    marginRight: 10,
-  },
-  recipeInfo: {
-    flex: 1,
+  avatarContainer: {
+    marginRight: 16,
+    alignItems: 'center',
     justifyContent: 'center',
   },
-  recipeTitle: {
+  avatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+  },
+  userInfo: {
+    flex: 1,
+  },
+  userName: {
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 2,
   },
-  recipeAuthor: {
+  userEmail: {
     fontSize: 14,
     color: '#555',
     marginBottom: 2,
   },
-  recipeDescription: {
-    fontSize: 14,
-    color: '#666',
+  userDate: {
+    fontSize: 12,
+    color: '#888',
   },
   buttonContainer: {
     flexDirection: 'row',
-    marginLeft: 8,
   },
   button: {
     flexDirection: 'row',

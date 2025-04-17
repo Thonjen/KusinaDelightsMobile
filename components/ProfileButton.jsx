@@ -32,13 +32,13 @@ const styles = StyleSheet.create({
     boxShadow: "0px 2px 4px rgba(0,0,0,0.3)",
   },
   profileImage: {
-    width: 25,
-    height: 25,
-    borderRadius: 12.5,
-    marginRight: 6,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    marginRight: 10,
   },
   username: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
     color: '#333',
   },

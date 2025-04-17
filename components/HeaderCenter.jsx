@@ -28,10 +28,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 30,
     elevation: 4, // Works on Android
     // The following shadow properties work on iOS:
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.4,
-    shadowRadius: 4,
+    boxShadow: "0px 2px 4px rgba(0,0,0,0.4)",
     alignItems: 'center',
   },
   logoContainer: {

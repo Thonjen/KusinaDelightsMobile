@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   picker: {
-    height: 40,
+    height: 55,
     width: '100%',
   },
   buttonRow: {
