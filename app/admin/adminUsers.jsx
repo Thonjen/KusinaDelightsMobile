@@ -11,6 +11,7 @@ import AdminUsersHeader from '../../components/AdminUsersHeader';
 import AdminUserCard from '../../components/AdminUserCard';
 import AdminBottomNavbar from '../../components/AdminBottomNavbar';
 import Pagination from '../../components/Pagination';
+import CreateUserModal from '../../components/CreateUserModal';
 import * as database from '../../database/database';
 
 const AdminUsers = () => {
@@ -20,12 +21,15 @@ const AdminUsers = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+
+  const loadUsers = async () => {
+    const all = await database.getUsers();
+    setUsers(all);
+  };
 
   useEffect(() => {
-    (async () => {
-      const all = await database.getUsers();
-      setUsers(all);
-    })();
+    loadUsers();
   }, []);
 
   // apply role + search filters
@@ -85,13 +89,21 @@ const AdminUsers = () => {
 
         <TouchableOpacity
           style={styles.createButton}
-          onPress={() => router.push('/admin/adminCreateUser')}
+          onPress={() => setShowCreateModal(true)}
         >
-          <Text style={styles.createButtonText}>New User</Text>
+          <Text style={styles.createButtonText}>+ New User</Text>
         </TouchableOpacity>
       </ScrollView>
 
       <AdminBottomNavbar />
+
+      <CreateUserModal
+        visible={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onCreated={newUser => {
+          loadUsers();
+        }}
+      />
     </View>
   );
 };
