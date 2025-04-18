@@ -1,8 +1,10 @@
+// app/recipe.jsx
+
 import React, { useState, useEffect, useRef, useContext } from 'react';
-import { View, Text, StyleSheet, Animated, TextInput, Platform } from 'react-native';
+import { View, Text, StyleSheet, Animated, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as database from '../database/database';
+import { getRecipes, getReviews } from '../database/database';
 import RecipeCard from '../components/RecipeCard';
 import MediumRecipeCard from '../components/MediumRecipeCard';
 import ListRecipeCard from '../components/ListRecipeCard';
@@ -19,31 +21,39 @@ const Recipe = () => {
   const { layout } = useContext(LayoutContext);
 
   useEffect(() => {
-    const fetchData = async () => {
+    (async () => {
       try {
-        const data = await database.getRecipes();
-        const sortedRecipes = [...data].reverse();
-        const visibleRecipes = sortedRecipes.filter((recipe) => !recipe.hidden);
-        setRecipes(visibleRecipes);
+        // fetch all recipes & reviews
+        const allRecipes = await getRecipes();
+        const allReviews = await getReviews();
+
+        // enrich with avgRating
+        const enriched = allRecipes.map((r) => {
+          const rs = allReviews.filter((rv) => rv.recipeId === r.id);
+          const avg =
+            rs.length > 0
+              ? rs.reduce((sum, rv) => sum + rv.rating, 0) / rs.length
+              : 0;
+          return { ...r, avgRating: avg };
+        });
+
+        // reverse (recent first), filter hidden
+        const visible = enriched
+          .filter((r) => !r.hidden)
+          .sort((a, b) => Number(b.id) - Number(a.id)); // or .reverse()
+
+        setRecipes(visible);
       } catch (error) {
         console.error('Error fetching recipes:', error);
       }
-    };
-    fetchData();
+    })();
   }, []);
 
   useEffect(() => {
-    const fetchCurrentUser = async () => {
-      try {
-        const userString = await AsyncStorage.getItem('currentUser');
-        if (userString) {
-          setCurrentUser(JSON.parse(userString));
-        }
-      } catch (error) {
-        console.error('Error fetching current user:', error);
-      }
-    };
-    fetchCurrentUser();
+    (async () => {
+      const userString = await AsyncStorage.getItem('currentUser');
+      if (userString) setCurrentUser(JSON.parse(userString));
+    })();
   }, []);
 
   const headerScale = scrollY.interpolate({
@@ -52,17 +62,15 @@ const Recipe = () => {
     extrapolate: 'clamp',
   });
 
-  const filteredRecipes = recipes.filter((r) =>
+  const filtered = recipes.filter((r) =>
     r.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleViewRecipe = (id) => {
-    router.push(`/recipeDetail?id=${id}`);
-  };
+  const handleView = (id) => router.push(`/recipeDetail?id=${id}`);
 
   return (
     <View style={styles.container}>
-      <AppHeader 
+      <AppHeader
         headerTitle="Recent Recipes"
         currentUser={currentUser}
         onProfilePress={() => router.push('/profile')}
@@ -74,29 +82,43 @@ const Recipe = () => {
       <Animated.ScrollView
         style={styles.scrollContainer}
         contentContainerStyle={styles.scrollContent}
-        bounces={true}
-        overScrollMode="always"
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
           { useNativeDriver: Platform.OS !== 'web' }
         )}
         scrollEventThrottle={16}
       >
-        <Text style={[styles.sectionTitle, { textAlign: 'center' }]}>Recent Recipes</Text>
+        <Text style={styles.sectionTitle}>Recent Recipes</Text>
+
         {layout === 'medium' ? (
           <View style={styles.gridContainer}>
-            {filteredRecipes.map((item) => (
-              <MediumRecipeCard key={item.id} item={item} onPress={handleViewRecipe} />
+            {filtered.map((item) => (
+              <MediumRecipeCard
+                key={item.id}
+                item={item}
+                onPress={handleView}
+              />
             ))}
           </View>
         ) : (
-          filteredRecipes.map((item) => {
+          filtered.map((item) => {
             if (layout === 'default') {
-              return <RecipeCard key={item.id} item={item} onPress={handleViewRecipe} />;
-            } else if (layout === 'list') {
-              return <ListRecipeCard key={item.id} item={item} onPress={handleViewRecipe} />;
+              return (
+                <RecipeCard
+                  key={item.id}
+                  item={item}
+                  onPress={handleView}
+                />
+              );
+            } else {
+              return (
+                <ListRecipeCard
+                  key={item.id}
+                  item={item}
+                  onPress={handleView}
+                />
+              );
             }
-            return null;
           })
         )}
       </Animated.ScrollView>
@@ -109,20 +131,13 @@ const Recipe = () => {
 export default Recipe;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F5F5F5',
-  },
-  scrollContainer: {
-    flex: 1,
-    paddingHorizontal: 16,
-  },
-  scrollContent: {
-    paddingBottom: 90, // Updated paddingBottom here as well
-  },
+  container: { flex: 1, backgroundColor: '#F5F5F5' },
+  scrollContainer: { flex: 1, paddingHorizontal: 16 },
+  scrollContent: { paddingBottom: 90 },
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
+    textAlign: 'center',
     marginVertical: 16,
   },
   gridContainer: {

@@ -31,7 +31,6 @@ async function getData(key) {
 
 /** USERS **/
 
-// Create a new user with timestamp ID & dateJoined
 export async function createUser(username, email, password) {
   const users = await getData(USERS_KEY);
   const now   = new Date().toISOString();
@@ -48,18 +47,15 @@ export async function createUser(username, email, password) {
   return newUser;
 }
 
-// Retrieve all users
 export async function getUsers() {
   return await getData(USERS_KEY);
 }
 
-// Find a user by email (case‑insensitive)
 export async function getUserByEmail(email) {
   const users = await getUsers();
   return users.find(u => u.email.toLowerCase() === email.toLowerCase());
 }
 
-// Update an existing user (merges fields, preserves dateJoined)
 export async function updateUser(updatedUser) {
   const users = await getData(USERS_KEY);
   const out   = users.map(u =>
@@ -69,7 +65,6 @@ export async function updateUser(updatedUser) {
   return out;
 }
 
-// Remove a user and their profile
 export async function removeUser(userID) {
   const users    = await getData(USERS_KEY);
   const filtered = users.filter(u => u.id !== userID);
@@ -83,7 +78,6 @@ export async function removeUser(userID) {
 
 /** USER PROFILES **/
 
-// Create or update a user's profile (image + introduction)
 export async function createUserProfile(userID, profileImage, introduction) {
   const profiles = await getData(PROFILES_KEY);
   const idx      = profiles.findIndex(p => p.userID === userID);
@@ -94,7 +88,6 @@ export async function createUserProfile(userID, profileImage, introduction) {
   return record;
 }
 
-// Get one user's profile
 export async function getUserProfile(userID) {
   const profiles = await getData(PROFILES_KEY);
   return profiles.find(p => p.userID === userID) || null;
@@ -102,12 +95,10 @@ export async function getUserProfile(userID) {
 
 /** RECIPES **/
 
-// Get all recipes
 export async function getRecipes() {
   return await getData(RECIPES_KEY);
 }
 
-// Create a recipe with timestamp ID & dateCreated
 export async function createRecipe(recipeData) {
   const recipes = await getData(RECIPES_KEY);
   const now     = new Date().toISOString();
@@ -124,7 +115,6 @@ export async function createRecipe(recipeData) {
   return newRecipe;
 }
 
-// Update a recipe
 export async function updateRecipe(updatedRecipe) {
   const recipes = await getData(RECIPES_KEY);
   const out     = recipes.map(r =>
@@ -134,7 +124,6 @@ export async function updateRecipe(updatedRecipe) {
   return out;
 }
 
-// Remove a recipe
 export async function removeRecipe(recipeId) {
   const recipes = await getData(RECIPES_KEY);
   const filtered = recipes.filter(r => r.id !== recipeId);
@@ -144,19 +133,10 @@ export async function removeRecipe(recipeId) {
 
 /** REVIEWS **/
 
-// Get all reviews
 export async function getReviews() {
   return await getData(REVIEWS_KEY);
 }
 
-/**
- * reviewData: {
- *   recipeId: string,
- *   userId:   string,
- *   rating:   number,
- *   comment:  string
- * }
- */
 export async function createReview(reviewData) {
   const reviews = await getData(REVIEWS_KEY);
   const now     = new Date().toISOString();
@@ -166,7 +146,6 @@ export async function createReview(reviewData) {
   return newReview;
 }
 
-// Remove a review
 export async function removeReview(reviewId) {
   const reviews  = await getData(REVIEWS_KEY);
   const filtered = reviews.filter(r => r.id !== reviewId);
@@ -174,14 +153,24 @@ export async function removeReview(reviewId) {
   return filtered;
 }
 
+// <--- NEW! updateReview replaces an existing review by id --->
+export async function updateReview(updatedReview) {
+  const reviews = await getData(REVIEWS_KEY);
+  const out     = reviews.map(r =>
+    r.id === updatedReview.id
+      ? { ...r, rating: updatedReview.rating, comment: updatedReview.comment }
+      : r
+  );
+  await storeData(REVIEWS_KEY, out);
+  return out;
+}
+
 /** CHEFS **/
 
-// Get all chefs
 export async function getChefs() {
   return await getData(CHEFS_KEY);
 }
 
-// Create a chef with timestamp ID & dateCreated
 export async function createChef(chefData) {
   const chefs = await getData(CHEFS_KEY);
   const now   = new Date().toISOString();
@@ -191,7 +180,6 @@ export async function createChef(chefData) {
   return newChef;
 }
 
-// Remove a chef
 export async function removeChef(chefId) {
   const chefs    = await getData(CHEFS_KEY);
   const filtered = chefs.filter(c => c.id !== chefId);

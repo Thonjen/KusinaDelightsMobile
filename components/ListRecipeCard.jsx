@@ -1,97 +1,78 @@
+// components/ListRecipeCard.jsx
+
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-const ListRecipeCard = ({ item, onPress }) => {
+export default function ListRecipeCard({ item, onPress }) {
+  const stars = Math.round(item.avgRating);
   return (
-    <View style={styles.cardContainer}>
-      <Image source={{ uri: item.image }} style={styles.recipeImage} />
-      <View style={styles.contentContainer}>
+    <View style={styles.card}>
+      <Image source={{ uri: item.image }} style={styles.image} />
+      <View style={styles.content}>
         <View style={styles.titleRow}>
-          <Text style={styles.recipeTitle}>{item.name}</Text>
-          {item.favorite && (
-            <Ionicons
-              name="star"
-              size={20}
-              color="gold"
-              style={styles.favoriteIcon}
-            />
+          <Text style={styles.title}>{item.name}</Text>
+          {stars > 0 && (
+            <View style={styles.stars}>
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Ionicons
+                  key={i}
+                  name={i < stars ? 'star' : 'star-outline'}
+                  size={16}
+                  color="#F8D64E"
+                />
+              ))}
+            </View>
           )}
         </View>
-        {item.author && (
-          <Text style={styles.authorText}>by {item.author}</Text>
-        )}
-        <Text style={styles.recipeDescription} numberOfLines={2} ellipsizeMode="tail">
+        {item.author && <Text style={styles.author}>by {item.author}</Text>}
+        <Text style={styles.desc} numberOfLines={2}>
           {item.description}
         </Text>
       </View>
       <TouchableOpacity
-        style={styles.viewButton}
+        style={styles.btn}
         onPress={() => onPress(item.id)}
       >
-        <Text style={styles.viewButtonText}>View</Text>
+        <Text style={styles.btnText}>View</Text>
       </TouchableOpacity>
     </View>
   );
-};
-
-export default ListRecipeCard;
+}
 
 const styles = StyleSheet.create({
-  cardContainer: {
+  card: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#FFF',
     borderRadius: 10,
     marginVertical: 8,
     padding: 12,
     alignItems: 'center',
     elevation: 3,
     width: '100%',
-    alignSelf: 'center',
-    boxShadow: "0px 2px 4px rgba(0,0,0,0.3)",
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
   },
-  recipeImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
-    marginRight: 10,
-  },
-  contentContainer: {
-    flex: 1,
-  },
+  image: { width: 80, height: 80, borderRadius: 8, marginRight: 10 },
+  content: { flex: 1 },
   titleRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 2,
   },
-  recipeTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  favoriteIcon: {
-    marginLeft: 5,
-  },
-  authorText: {
-    fontSize: 14,
-    color: '#666',
-    fontStyle: 'italic',
-    marginBottom: 4,
-  },
-  recipeDescription: {
-    fontSize: 13,
-    color: '#666',
-    textAlign: 'justify',
-  },
-  viewButton: {
+  title: { fontSize: 20, fontWeight: 'bold' },
+  stars: { flexDirection: 'row' },
+  author: { fontSize: 14, color: '#666', fontStyle: 'italic', marginBottom: 4 },
+  desc: { fontSize: 13, color: '#666', textAlign: 'justify' },
+  btn: {
     backgroundColor: '#FFA500',
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 6,
     marginLeft: 8,
   },
-  viewButtonText: {
-    color: '#FFF',
-    fontWeight: 'bold',
-  },
+  btnText: { color: '#FFF', fontWeight: 'bold' },
 });
