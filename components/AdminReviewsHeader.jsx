@@ -1,20 +1,11 @@
+// components/AdminReviewsHeader.jsx
 import React from 'react';
-import {
-  View,
-  Text,
-  Image,
-  StyleSheet,
-  TextInput,
-} from 'react-native';
+import { View, Text, TextInput, Image, StyleSheet } from 'react-native';
 
-const AdminPostsHeader = ({
-  title = 'Posts',
-  searchQuery,
-  onSearchChange,
-}) => {
+export default function AdminReviewsHeader({ title, searchQuery, onSearchChange }) {
   return (
     <View style={styles.header}>
-      <View style={styles.topRow}>
+      <View style={styles.logoContainer}>
         <Image
           source={require('../assets/images/KusinaDelightsLogo.png')}
           style={styles.logo}
@@ -22,35 +13,32 @@ const AdminPostsHeader = ({
         />
         <Text style={styles.title}>{title}</Text>
       </View>
-
       <TextInput
         style={styles.searchInput}
-        placeholder="Search posts…"
+        placeholder="Search by user or recipe..."
         value={searchQuery}
         onChangeText={onSearchChange}
       />
     </View>
   );
-};
-
-export default AdminPostsHeader;
+}
 
 const styles = StyleSheet.create({
   header: {
     backgroundColor: '#F8D64E',
     paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 16,
+    paddingTop: 10,
+    paddingBottom: 12,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
     elevation: 4,
     boxShadow: "0px 2px 4px rgba(0,0,0,0.4)",
   },
-  topRow: {
+  logoContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   logo: {
     width: 50,
