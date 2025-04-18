@@ -30,6 +30,7 @@ const ProfileInfoCard = ({
 }) => {
   const router = useRouter();
   const goAdmin = () => router.push('/admin/adminProfile');
+  const goChef  = () => router.push('/chef/chefProfile');
 
   return (
     <View style={[styles.card, styles.boxShadow]}>
@@ -131,6 +132,14 @@ const ProfileInfoCard = ({
         {currentUser?.role === 'user' && (
           <TouchableOpacity style={styles.adminButton} onPress={goAdmin}>
             <Text style={styles.adminButtonText}>Admin Dashboard</Text>
+          </TouchableOpacity>
+        )}
+
+        {/* Chef Dashboard (chefs only) */}
+        {currentUser?.role === 'user' && (
+          <TouchableOpacity style={styles.chefButton} onPress={goChef}>
+            <Ionicons name="bar-chart" size={16} color="#FFF" />
+            <Text style={styles.chefButtonText}>Chef Dashboard</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -243,4 +252,19 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   adminButtonText: { color: '#FFF', fontWeight: 'bold', fontSize: 16 },
+  chefButton: {
+    flexDirection: 'row',
+    backgroundColor: '#000',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginTop: 8,
+    alignItems: 'center',
+  },
+  chefButtonText: {
+    color: '#FFF',
+    fontWeight: 'bold',
+    fontSize: 16,
+    marginLeft: 6,
+  },
 });

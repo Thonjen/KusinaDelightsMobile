@@ -19,7 +19,7 @@ const AdminPosts = () => {
   const [recipes, setRecipes] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5);
+  const [pageSize, setPageSize] = useState(10);
 
   useEffect(() => {
     (async () => {
