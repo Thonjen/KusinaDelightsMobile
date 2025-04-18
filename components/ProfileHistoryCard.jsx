@@ -1,5 +1,5 @@
 // components/ProfileHistoryCard.jsx
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -8,50 +8,97 @@ import {
   StyleSheet
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import Pagination from './Pagination';
 
 export default function ProfileHistoryCard({ history, onView, onDelete }) {
-  if (!history.length) return null;
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize]     = useState(5);
+
+  const totalPages = Math.ceil(history.length / pageSize);
+  const start      = (currentPage - 1) * pageSize;
+  const pageItems  = history.slice(start, start + pageSize);
+
   return (
     <View style={[styles.card, styles.boxShadow]}>
       <Text style={styles.header}>History</Text>
-      {history.map(item => (
-        <View key={item.recipeId} style={styles.entry}>
-          <Image source={{ uri: item.image }} style={styles.image} />
-          <View style={styles.details}>
-            <View style={styles.topRow}>
-              <Text style={styles.title} numberOfLines={1}>{item.name}</Text>
-              <View style={styles.stars}>
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Ionicons
-                    key={i}
-                    name={i < item.rating ? "star" : "star-outline"}
-                    size={16}
-                    color="#F8D64E"
-                  />
-                ))}
-              </View>
-            </View>
-            <Text style={styles.author}>By {item.author}</Text>
-            <Text style={styles.comment} numberOfLines={2}>{item.comment}</Text>
-            <View style={styles.btnRow}>
-              <TouchableOpacity
-                style={styles.viewBtn}
-                onPress={() => onView(item.recipeId)}
-              >
-                <Ionicons name="eye-outline" size={16} color="#FFF" />
-                <Text style={styles.btnText}>View</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.delBtn}
-                onPress={() => onDelete(item.recipeId)}
-              >
-                <Ionicons name="trash-outline" size={16} color="#FFF" />
-                <Text style={styles.btnText}>Delete</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+
+      {history.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Ionicons name="time-outline" size={48} color="#888" />
+          <Text style={styles.emptyText}>
+            No history yet — start reviewing some recipes!
+          </Text>
         </View>
-      ))}
+      ) : (
+        <>
+          {pageItems.map(item => {
+            // Safely parse date
+            const date = item.dateCreated
+              ? new Date(item.dateCreated).toLocaleDateString()
+              : '';
+
+            return (
+              <View key={item.recipeId} style={styles.entry}>
+                <Image source={{ uri: item.image }} style={styles.image} />
+                <View style={styles.details}>
+                  <View style={styles.topRow}>
+                    <Text style={styles.title} numberOfLines={1}>
+                      {item.name}
+                    </Text>
+                    <View style={styles.dateStarsRow}>
+                      <Text style={styles.date}>{date}</Text>
+                      <View style={styles.stars}>
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Ionicons
+                            key={i}
+                            name={i < item.rating ? 'star' : 'star-outline'}
+                            size={16}
+                            color="#F8D64E"
+                          />
+                        ))}
+                      </View>
+                    </View>
+                  </View>
+                  <Text style={styles.author}>By {item.author}</Text>
+
+                  <View style={styles.commentRow}>
+                    <Text
+                      style={styles.comment}
+                      numberOfLines={2}
+                      ellipsizeMode="tail"
+                    >
+                      {item.comment}
+                    </Text>
+                    <TouchableOpacity
+                      style={styles.viewBtn}
+                      onPress={() => onView(item.recipeId)}
+                    >
+                      <Ionicons name="eye-outline" size={16} color="#FFF" />
+                      <Text style={styles.btnText}>View</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.delBtn}
+                      onPress={() => onDelete(item.recipeId)}
+                    >
+                      <Ionicons name="trash-outline" size={16} color="#FFF" />
+                      <Text style={styles.btnText}>Delete</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            );
+          })}
+
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            pageSize={pageSize}
+            onPageSizeChange={v => { setPageSize(v); setCurrentPage(1); }}
+            onNextPage={() => currentPage < totalPages && setCurrentPage(p => p + 1)}
+            onPrevPage={() => currentPage > 1 && setCurrentPage(p => p - 1)}
+          />
+        </>
+      )}
     </View>
   );
 }
@@ -76,6 +123,16 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     color: '#333',
   },
+  emptyContainer: {
+    alignItems: 'center',
+    paddingVertical: 20,
+  },
+  emptyText: {
+    marginTop: 8,
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+  },
   entry: {
     flexDirection: 'row',
     backgroundColor: '#FFF',
@@ -84,8 +141,13 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   image: {
-    width: 60,
-    height: 60,
+    width: 80,
+    height: 80,
+    borderRadius: 15,
+    marginTop: 8,
+    marginBottom: 8,
+    marginLeft: 8,
+    marginRight: 8,
   },
   details: {
     flex: 1,
@@ -101,46 +163,55 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  dateStarsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  date: {
+    fontSize: 12,
+    color: '#555',
+    marginRight: 6,   // space between date and stars
+  },
   stars: {
     flexDirection: 'row',
-    marginLeft: 8,
   },
   author: {
     fontSize: 12,
     color: '#555',
     marginTop: 2,
+    marginBottom: 4,
+  },
+  commentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   comment: {
+    flex: 1,
     fontSize: 14,
     color: '#333',
-    marginTop: 4,
-  },
-  btnRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginTop: 6,
   },
   viewBtn: {
     backgroundColor: '#4CAF50',
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: 6,
-    marginRight: 8,
+    marginLeft: 8,
   },
   delBtn: {
     backgroundColor: '#D9534F',
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: 6,
+    marginLeft: 8,
   },
   btnText: {
     color: '#FFF',
     marginLeft: 4,
-    fontSize: 12,
+    fontSize: 15,
     fontWeight: '600',
   },
 });

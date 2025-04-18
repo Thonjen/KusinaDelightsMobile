@@ -75,6 +75,7 @@ const Profile = () => {
         image: rec.image,
         author: rec.author,
         comment: r.comment,
+        dateCreated: r.dateCreated,
         rating: r.rating
       };
     });
