@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8D64E',
     margin: 16,
     borderRadius: 10,
-    padding: 16,
+    padding: 30,
   },
   boxShadow: {
     boxShadow: "0px 2px 4px rgba(0,0,0,0.3)",

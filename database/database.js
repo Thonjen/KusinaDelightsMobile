@@ -3,11 +3,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Keys for AsyncStorage
-const USERS_KEY    = 'KusinaDelights_USERS';
-const PROFILES_KEY = 'KusinaDelights_USER_PROFILES';
-const RECIPES_KEY  = 'KusinaDelights_RECIPES';
-const REVIEWS_KEY  = 'KusinaDelights_REVIEWS';
-const CHEFS_KEY    = 'KusinaDelights_CHEFS';
+const USERS_KEY      = 'KusinaDelights_USERS';
+const PROFILES_KEY   = 'KusinaDelights_USER_PROFILES';
+const RECIPES_KEY    = 'KusinaDelights_RECIPES';
+const REVIEWS_KEY    = 'KusinaDelights_REVIEWS';
+const CHEFS_KEY      = 'KusinaDelights_CHEFS';
+const FAVORITES_KEY  = 'KusinaDelights_FAVORITES';  // ← NEW
 
 /** Helper: save data under a given key **/
 async function storeData(key, value) {
@@ -30,7 +31,6 @@ async function getData(key) {
 }
 
 /** USERS **/
-
 export async function createUser(username, email, password) {
   const users = await getData(USERS_KEY);
   const now   = new Date().toISOString();
@@ -77,7 +77,6 @@ export async function removeUser(userID) {
 }
 
 /** USER PROFILES **/
-
 export async function createUserProfile(userID, profileImage, introduction) {
   const profiles = await getData(PROFILES_KEY);
   const idx      = profiles.findIndex(p => p.userID === userID);
@@ -94,7 +93,6 @@ export async function getUserProfile(userID) {
 }
 
 /** RECIPES **/
-
 export async function getRecipes() {
   return await getData(RECIPES_KEY);
 }
@@ -132,7 +130,6 @@ export async function removeRecipe(recipeId) {
 }
 
 /** REVIEWS **/
-
 export async function getReviews() {
   return await getData(REVIEWS_KEY);
 }
@@ -153,7 +150,6 @@ export async function removeReview(reviewId) {
   return filtered;
 }
 
-// <--- NEW! updateReview replaces an existing review by id --->
 export async function updateReview(updatedReview) {
   const reviews = await getData(REVIEWS_KEY);
   const out     = reviews.map(r =>
@@ -166,7 +162,6 @@ export async function updateReview(updatedReview) {
 }
 
 /** CHEFS **/
-
 export async function getChefs() {
   return await getData(CHEFS_KEY);
 }
@@ -185,4 +180,30 @@ export async function removeChef(chefId) {
   const filtered = chefs.filter(c => c.id !== chefId);
   await storeData(CHEFS_KEY, filtered);
   return filtered;
+}
+
+/** FAVORITES **/
+export async function getFavorites() {
+  return await getData(FAVORITES_KEY);
+}
+
+export async function getFavoritesByUser(userId) {
+  const all = await getFavorites();
+  return all.filter(f => f.userId === userId);
+}
+
+export async function addFavorite(userId, recipeId) {
+  const all = await getFavorites();
+  if (!all.find(f => f.userId === userId && f.recipeId === recipeId)) {
+    all.push({ userId, recipeId });
+    await storeData(FAVORITES_KEY, all);
+  }
+  return all;
+}
+
+export async function removeFavorite(userId, recipeId) {
+  let all = await getFavorites();
+  all = all.filter(f => !(f.userId === userId && f.recipeId === recipeId));
+  await storeData(FAVORITES_KEY, all);
+  return all;
 }

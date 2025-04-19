@@ -43,10 +43,8 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
-    // Box shadow for iOS & elevation for Android:
     boxShadow: "0px 2px 4px rgba(0,0,0,0.4)",
     elevation: 4,
-    marginBottom: 8, // some spacing below the header
   },
   header: {
     flexDirection: 'row',
