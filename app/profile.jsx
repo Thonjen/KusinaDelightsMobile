@@ -23,6 +23,8 @@ import {
 import ProfileInfoCard from '../components/ProfileInfoCard';
 import ProfileIntroCard from '../components/ProfileIntroCard';
 import ProfileHistoryCard from '../components/ProfileHistoryCard';
+import { uploadImage } from "../contexts/cloudinary";
+import { useLoading } from '../contexts/LoadingContext';
 
 const Profile = () => {
   const router = useRouter();
@@ -86,24 +88,61 @@ const Profile = () => {
     ? new Date(currentUser.dateJoined).toLocaleDateString()
     : 'N/A';
 
-  const pickImage = async (fromCamera = false) => {
-    const perm = fromCamera
-      ? await ImagePicker.requestCameraPermissionsAsync()
-      : await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (perm.status !== 'granted') {
-      return Alert.alert('Permission required','Please grant permission.');
-    }
-    const result = fromCamera
-      ? await ImagePicker.launchCameraAsync({allowsEditing:true,aspect:[1,1],quality:1})
-      : await ImagePicker.launchImageLibraryAsync({mediaTypes:ImagePicker.MediaTypeOptions.Images,allowsEditing:true,aspect:[1,1],quality:1});
-    if (result.canceled) return;
-    const uri = result.assets?.[0]?.uri ?? result.uri;
-    if (!uri) return;
-    const updated = { ...currentUser, profileImage: uri };
-    setCurrentUser(updated);
-    await AsyncStorage.setItem('currentUser', JSON.stringify(updated));
-    await updateUser(updated);
-  };
+    const pickImage = async (fromCamera = false) => {
+      // 1️⃣ Request permission
+      const { status } = fromCamera
+        ? await ImagePicker.requestCameraPermissionsAsync()
+        : await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        return Alert.alert(
+          'Permission required',
+          'Please grant camera or media library access to continue.'
+        );
+      }
+    
+      // 2️⃣ Pick image
+      const result = fromCamera
+        ? await ImagePicker.launchCameraAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 1,
+          })
+        : await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 1,
+          });
+    
+      // 3️⃣ Bail out if user cancelled
+      if (result.canceled) return;
+    
+      // 4️⃣ Extract the URI
+      const uri = result.assets?.[0]?.uri ?? result.uri;
+      if (!uri) return;
+    
+      // 5️⃣ Upload to Cloudinary (or wherever) **after** we have the URI
+      let cloudinaryUrl;
+      try {
+        cloudinaryUrl = await uploadImage(uri);
+      } catch (err) {
+        console.error('Image upload failed:', err);
+        Alert.alert('Upload failed', 'Could not upload image. Please try again.');
+        return;
+      }
+    
+      // 6️⃣ Update local state / storage / Firestore
+      const updated = { ...currentUser, profileImage: cloudinaryUrl };
+      setCurrentUser(updated);
+    
+      try {
+        await AsyncStorage.setItem('currentUser', JSON.stringify(updated));
+        await updateUser(updated);
+      } catch (err) {
+        console.error('Failed to save updated user:', err);
+      }
+    };
 
   const handleDeleteHistory = (recipeId) => {
     setToDeleteRecipeId(recipeId);

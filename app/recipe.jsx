@@ -1,7 +1,12 @@
-// app/recipe.jsx
-
 import React, { useState, useEffect, useRef, useContext } from 'react';
-import { View, Text, StyleSheet, Animated, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Animated,
+  Platform,
+  RefreshControl,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getRecipes, getReviews } from '../database/database';
@@ -11,44 +16,58 @@ import ListRecipeCard from '../components/ListRecipeCard';
 import BottomNavbar from '../components/BottomNavbar';
 import { LayoutContext } from '../contexts/LayoutContext';
 import AppHeader from '../components/AppHeader';
+import { useLoading } from '../contexts/LoadingContext';
 
 const Recipe = () => {
   const router = useRouter();
+  const { layout } = useContext(LayoutContext);
+  const { setLoading } = useLoading();
+
   const [recipes, setRecipes] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentUser, setCurrentUser] = useState(null);
+
+  // pull-down & scroll-up refresh states
+  const [refreshing, setRefreshing] = useState(false);
+  const [prevScrollY, setPrevScrollY] = useState(0);
+  const [triggeredRefresh, setTriggeredRefresh] = useState(false);
+
   const scrollY = useRef(new Animated.Value(0)).current;
-  const { layout } = useContext(LayoutContext);
 
+  // Fetch & enrich data
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const allRecipes = await getRecipes();
+      const allReviews = await getReviews();
+
+      const enriched = allRecipes.map((r) => {
+        const rs = allReviews.filter((rv) => rv.recipeId === r.id);
+        const avg =
+          rs.length > 0
+            ? rs.reduce((sum, rv) => sum + rv.rating, 0) / rs.length
+            : 0;
+        return { ...r, avgRating: avg };
+      });
+
+      const visible = enriched
+        .filter((r) => !r.hidden)
+        .sort((a, b) => Number(b.id) - Number(a.id));
+
+      setRecipes(visible);
+    } catch (error) {
+      console.error('Error fetching recipes:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initial load
   useEffect(() => {
-    (async () => {
-      try {
-        // fetch all recipes & reviews
-        const allRecipes = await getRecipes();
-        const allReviews = await getReviews();
-
-        // enrich with avgRating
-        const enriched = allRecipes.map((r) => {
-          const rs = allReviews.filter((rv) => rv.recipeId === r.id);
-          const avg =
-            rs.length > 0
-              ? rs.reduce((sum, rv) => sum + rv.rating, 0) / rs.length
-              : 0;
-          return { ...r, avgRating: avg };
-        });
-
-        // reverse (recent first), filter hidden
-        const visible = enriched
-          .filter((r) => !r.hidden)
-          .sort((a, b) => Number(b.id) - Number(a.id)); // or .reverse()
-
-        setRecipes(visible);
-      } catch (error) {
-        console.error('Error fetching recipes:', error);
-      }
-    })();
+    fetchData();
   }, []);
 
+  // Load currentUser
   useEffect(() => {
     (async () => {
       const userString = await AsyncStorage.getItem('currentUser');
@@ -56,12 +75,34 @@ const Recipe = () => {
     })();
   }, []);
 
+  // Pull-down refresh handler
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchData();
+    setRefreshing(false);
+  };
+
+  // Scroll-up refresh (like Facebook)
+  const refreshOnScrollUp = async () => {
+    setLoading(true);
+    try {
+      await fetchData();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+      setTriggeredRefresh(false);
+    }
+  };
+
+  // Animated header scale
   const headerScale = scrollY.interpolate({
     inputRange: [-100, 0],
     outputRange: [1.2, 1],
     extrapolate: 'clamp',
   });
 
+  // Filtered list
   const filtered = recipes.filter((r) =>
     r.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -84,9 +125,28 @@ const Recipe = () => {
         contentContainerStyle={styles.scrollContent}
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: Platform.OS !== 'web' }
+          {
+            useNativeDriver: Platform.OS !== 'web',
+            listener: (event) => {
+              const y = event.nativeEvent.contentOffset.y;
+              // detect scroll-up near top
+              if (y < 30 && prevScrollY - y > 10 && !triggeredRefresh) {
+                setTriggeredRefresh(true);
+                refreshOnScrollUp();
+              }
+              setPrevScrollY(y);
+            },
+          }
         )}
         scrollEventThrottle={16}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#F8D64E']}
+            tintColor="#F8D64E"
+          />
+        }
       >
         <Text style={styles.sectionTitle}>Recent Recipes</Text>
 
@@ -101,25 +161,21 @@ const Recipe = () => {
             ))}
           </View>
         ) : (
-          filtered.map((item) => {
-            if (layout === 'default') {
-              return (
-                <RecipeCard
-                  key={item.id}
-                  item={item}
-                  onPress={handleView}
-                />
-              );
-            } else {
-              return (
-                <ListRecipeCard
-                  key={item.id}
-                  item={item}
-                  onPress={handleView}
-                />
-              );
-            }
-          })
+          filtered.map((item) =>
+            layout === 'default' ? (
+              <RecipeCard
+                key={item.id}
+                item={item}
+                onPress={handleView}
+              />
+            ) : (
+              <ListRecipeCard
+                key={item.id}
+                item={item}
+                onPress={handleView}
+              />
+            )
+          )
         )}
       </Animated.ScrollView>
 

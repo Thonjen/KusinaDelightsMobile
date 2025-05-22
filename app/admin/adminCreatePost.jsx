@@ -17,9 +17,13 @@ import RecipeDetailHeader from '../../components/HeaderCenter'; // Shared header
 import AdminBottomNavbar from '../../components/AdminBottomNavbar';
 import * as database from '../../database/database';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { uploadImage } from "../../contexts/cloudinary";
+import { useLoading } from '../../contexts/LoadingContext';
+
 
 const AdminCreatePost = () => {
   const router = useRouter();
+  const { setLoading } = useLoading();
 
   // Form states
   const [title, setTitle] = useState('');
@@ -92,34 +96,45 @@ const AdminCreatePost = () => {
   };
 
   const handleCreate = async () => {
-    // Validate required fields
     if (!title || !description || !ingredients || !instructions || !imageUri) {
-      Alert.alert('Missing fields', 'Please fill in all required fields.');
+      Alert.alert("Missing fields", "Please fill in all required fields.");
       return;
     }
+  
     try {
-      // Include the author (current user admin username)
-      const newRecipe = await database.createRecipe({
+      setLoading(true); // Start loading
+  
+      // Upload image to Cloudinary if it's a local file
+      let finalImage = imageUri;
+      if (!/^https?:\/\//.test(imageUri)) {
+        finalImage = await uploadImage(imageUri);
+      }
+  
+      // Create recipe with Cloudinary URL
+      await database.createRecipe({
         name: title,
         description,
         ingredients,
         instructions,
-        image: imageUri,
+        image: finalImage,
         preparation: prepTime,
         cookingTime,
         servings,
         difficulty,
-        author: currentUser?.username || 'Admin',
+        author: currentUser?.username || "Admin",
         youtubeTutorial: youtubeTutorial || null,
       });
-      Alert.alert('Recipe Created', 'Your recipe has been created successfully!');
-      // Navigate back to AdminPosts so the new post appears
-      router.push('/admin/adminPosts');
+  
+      Alert.alert("Recipe Created", "Your recipe has been created successfully!");
+      router.push("/admin/adminPosts");
     } catch (error) {
-      console.error('Error creating recipe:', error);
-      Alert.alert('Error', 'An error occurred while creating the recipe.');
+      console.error(error);
+      Alert.alert("Error", "An error occurred while creating the recipe.");
+    } finally {
+      setLoading(false); // End loading
     }
   };
+  
 
   const handleCancel = () => {
     router.push('/admin/adminPosts');

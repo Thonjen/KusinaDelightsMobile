@@ -20,9 +20,15 @@ import SaveAlert from '../../components/alerts/SaveAlert';
 import CancelAlert from '../../components/alerts/CancelAlert';
 import ChefBottomNavbar from '../../components/ChefBottomNavbar';
 import * as database from '../../database/database';
+import { uploadImage } from "../../contexts/cloudinary";
+import { useLoading } from '../../contexts/LoadingContext';
+
+
 
 export default function ChefEditRecipe() {
   const router = useRouter();
+    const { setLoading } = useLoading();
+  
   const { id } = useLocalSearchParams();
 
   const [recipe, setRecipe] = useState(null);
@@ -83,25 +89,42 @@ export default function ChefEditRecipe() {
 
   const onSaveConfirm = async () => {
     if (!title || !description || !ingredients || !instructions || !imageUri) {
-      Alert.alert('Missing fields', 'Please fill in all required fields.');
+      Alert.alert("Missing fields", "Please fill in all required fields.");
       setSaveAlertVisible(false);
       return;
     }
-    const updated = {
-      ...recipe,
-      name: title,
-      description,
-      ingredients,
-      instructions,
-      image: imageUri,
-      preparation: prepTime,
-      cookingTime,
-      servings,
-      difficulty,
-      youtubeTutorial: youtubeTutorial || null,
-    };
-    await database.updateRecipe(updated);
-    router.replace('/chef/chefPosts');
+  
+    try {
+      setLoading(true); // Start loading
+  
+      // Upload image to Cloudinary if it's a local file
+      let finalImage = imageUri;
+      if (!/^https?:\/\//.test(imageUri)) {
+        finalImage = await uploadImage(imageUri);
+      }
+  
+      const updated = {
+        ...recipe,
+        name: title,
+        description,
+        ingredients,
+        instructions,
+        image: finalImage,
+        preparation: prepTime,
+        cookingTime,
+        servings,
+        difficulty,
+        youtubeTutorial: youtubeTutorial || null,
+      };
+  
+      await database.updateRecipe(updated);
+      router.replace("/chef/chefPosts");
+    } catch (e) {
+      console.error(e);
+      Alert.alert("Error", "Could not update recipe.");
+    } finally {
+      setLoading(false); // End loading
+    }
   };
 
   const onCancel = () => {

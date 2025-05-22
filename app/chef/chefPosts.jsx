@@ -10,6 +10,8 @@ import ChefBottomNavbar from '../../components/ChefBottomNavbar';
 import ChefRecipeCard from '../../components/ChefRecipeCard';
 import Pagination from '../../components/Pagination';
 import { getRecipes, getReviews } from '../../database/database';
+import { useLoading } from '../../contexts/LoadingContext';
+
 
 export default function ChefPosts() {
   const router = useRouter();

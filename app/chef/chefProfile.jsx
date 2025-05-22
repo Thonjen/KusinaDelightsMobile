@@ -14,6 +14,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import HeaderCenter from '../../components/HeaderCenter';
 import ChefBottomNavbar from '../../components/ChefBottomNavbar';
 import { getUserProfile, getRecipes, getReviews } from '../../database/database';
+import { useLoading } from '../../contexts/LoadingContext';
+
 
 export default function ChefProfile() {
   const router = useRouter();

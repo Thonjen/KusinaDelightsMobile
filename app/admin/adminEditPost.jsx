@@ -20,11 +20,16 @@ import CancelAlert from '../../components/alerts/CancelAlert';
 import RemoveAlert from '../../components/alerts/RemoveAlert';
 import * as database from '../../database/database';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { uploadImage } from "../../contexts/cloudinary";
+import { useLoading } from '../../contexts/LoadingContext';
+
+
 
 const AdminEditPost = () => {
   const router = useRouter();
   const { id } = useLocalSearchParams(); // Get recipe id from URL query
   const [currentRecipe, setCurrentRecipe] = useState(null);
+  const { setLoading } = useLoading();
 
   // Form state variables for editing
   const [title, setTitle] = useState('');
@@ -131,34 +136,47 @@ const AdminEditPost = () => {
   // Actual save function (called from alert confirmation)
   const onSaveConfirm = async () => {
     if (!title || !description || !ingredients || !instructions || !imageUri) {
-      Alert.alert('Missing fields', 'Please fill in all required fields.');
+      Alert.alert("Missing fields", "Please fill in all required fields.");
       return;
     }
+  
     try {
+      setLoading(true); // Start loading
+  
+      // Upload image to Cloudinary if it's a local file
+      let finalImage = imageUri;
+      if (!/^https?:\/\//.test(imageUri)) {
+        finalImage = await uploadImage(imageUri);
+      }
+  
       const updatedRecipe = {
         ...currentRecipe,
         name: title,
         description,
         ingredients,
         instructions,
-        image: imageUri,
+        image: finalImage,
         preparation: prepTime,
         cookingTime,
         servings,
         difficulty,
         youtubeTutorial: youtubeTutorial || null,
-        author: currentUser?.username || currentRecipe.author || 'Admin',
+        author: currentUser?.username || currentRecipe.author || "Admin",
       };
+  
       await database.updateRecipe(updatedRecipe);
-      Alert.alert('Recipe Updated', 'Your recipe has been updated successfully!');
+      Alert.alert("Recipe Updated", "Your recipe has been updated successfully!");
       setSaveAlertVisible(false);
-      router.push('/adminPosts');
+      router.push("/admin/adminPosts");
     } catch (error) {
-      console.error('Error updating recipe:', error);
-      Alert.alert('Error', 'An error occurred while updating the recipe.');
+      console.error(error);
+      Alert.alert("Error", "An error occurred while updating the recipe.");
       setSaveAlertVisible(false);
+    } finally {
+      setLoading(false); // End loading
     }
   };
+  
 
   // Actual cancel function (discard changes)
   const onCancelDiscard = () => {

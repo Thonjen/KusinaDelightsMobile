@@ -20,6 +20,8 @@ import {
   getReviews,
   getChefs,
 } from '../../database/database';
+import { useLoading } from '../../contexts/LoadingContext';
+
 
 const AdminProfile = () => {
   const router = useRouter();

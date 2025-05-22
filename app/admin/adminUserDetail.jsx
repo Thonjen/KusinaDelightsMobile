@@ -13,6 +13,8 @@ import RecipeDetailHeader from '../../components/HeaderCenter';
 import AdminBottomNavbar from '../../components/AdminBottomNavbar';
 import * as database from '../../database/database';
 import RemoveUserAlert from '../../components/alerts/RemoveUserAlert';
+import { useLoading } from '../../contexts/LoadingContext';
+
 
 const AdminUserDetail = () => {
   const router = useRouter();
