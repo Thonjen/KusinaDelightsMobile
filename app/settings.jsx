@@ -78,7 +78,7 @@ export default function Settings() {
     <View style={styles.container}>
       <HeaderCenter headerTitle="Settings" />
 
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={[styles.content, { paddingBottom: 100 }]}>
         <Text style={styles.pageTitle}>Settings</Text>
 
         {/* Account Card */}

@@ -162,9 +162,6 @@ const Signup = () => {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
-
-      {/* Bottom Curved Container */}
-      <View style={styles.bottomContainer} />
     </ImageBackground>
   );
 };
@@ -277,16 +274,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#000',
-  },
-  // Bottom curved container styling (placed at the bottom)
-  bottomContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 80,
-    backgroundColor: '#F8D64E',
-    borderTopLeftRadius: 50,
-    borderTopRightRadius: 50,
   },
 });
