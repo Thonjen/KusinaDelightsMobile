@@ -16,9 +16,14 @@ import HeaderCenter from "../../components/HeaderCenter";
 import ChefBottomNavbar from "../../components/ChefBottomNavbar";
 import * as database from "../../database/database";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { uploadImage } from "../../contexts/cloudinary";
+import { useLoading } from '../../contexts/LoadingContext';
+
 
 export default function ChefCreatePost() {
   const router = useRouter();
+    const { setLoading } = useLoading();
+  
   const [fields, set] = useState({
     name: "",
     description: "",
@@ -70,15 +75,28 @@ export default function ChefCreatePost() {
       return Alert.alert("Missing", "Please fill required fields.");
     }
     try {
+      setLoading(true); // Start loading
+  
+      // Upload image to Cloudinary if it's a local file
+      let finalImage = fields.image;
+      if (!/^https?:\/\//.test(fields.image)) {
+        finalImage = await uploadImage(fields.image);
+      }
+  
+      // Create the recipe with the Cloudinary URL
       await database.createRecipe({
         ...fields,
+        image: finalImage,
         author: user?.username || "Chef",
       });
+  
       Alert.alert("Created", "Recipe successfully created.");
       router.push("/chef/chefPosts");
     } catch (e) {
       console.error(e);
       Alert.alert("Error", "Could not create recipe.");
+    } finally {
+      setLoading(false); // End loading
     }
   };
 

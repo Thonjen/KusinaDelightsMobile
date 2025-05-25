@@ -121,6 +121,8 @@ export default function Reviews({ recipeId }) {
                       source={{ uri: r.avatar }}
                       style={styles.avatar}
                     />
+                    
+                    
                   ) : (
                     <Ionicons
                       name="person-circle-outline"

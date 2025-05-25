@@ -14,6 +14,7 @@ import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createUser, getUsers } from '../database/database';
 import HeaderCenter from '../components/HeaderCenter';
+import { syncAllToFirebase } from '../contexts/syncToFirebase';
 
 const Signup = () => {
   const [username, setUsername]             = useState('');
@@ -66,6 +67,7 @@ const Signup = () => {
       // Create user if no duplicates found
       const newUser = await createUser(username, email, password);
       await AsyncStorage.setItem('currentUser', JSON.stringify(newUser));
+      await syncAllToFirebase();
       router.push('/home');
     } catch (error) {
       console.error('Signup error', error);

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -10,44 +10,59 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import HeaderCenter from '../components/HeaderCenter';
-import { getUserByEmail } from '../database/database';
+} from "react-native";
+import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import HeaderCenter from "../components/HeaderCenter";
+import { getUserByEmail } from "../database/database";
+import { syncAllToFirebase } from "../contexts/syncToFirebase";
+import { ActivityIndicator } from "react-native";
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [isDisabled, setIsDisabled] = useState(false);
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const router = useRouter();
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Error', 'Please enter both email and password.');
+      Alert.alert("Error", "Please enter both email and password.");
       return;
     }
+
+    setLoading(true); // Start loading spinner
+    setIsDisabled(true);
+    setTimeout(() => setIsDisabled(false), 3000); // Disable for 3 seconds
     try {
       const user = await getUserByEmail(email);
       if (user && user.password === password) {
-        // Save current user and navigate
-        await AsyncStorage.setItem('currentUser', JSON.stringify(user));
-        router.push('/home');
+        await AsyncStorage.setItem("currentUser", JSON.stringify(user));
+
+        // Wait for sync
+        await syncAllToFirebase();
+
+        // Navigate
+        router.push("/home");
       } else {
-        Alert.alert('Error', 'Invalid email or password.');
+        Alert.alert("Error", "Invalid email or password.");
       }
     } catch (error) {
-      console.error('Login error', error);
-      Alert.alert('Error', 'An error occurred during login.');
+      console.error("Login error", error);
+      Alert.alert("Error", "An error occurred during login.");
+    } finally {
+      setLoading(false); // Stop spinner either way
     }
   };
 
   const handleSignUp = () => {
-    router.push('/signup');
+    router.push("/signup");
   };
 
   return (
     <ImageBackground
-      source={require('../assets/images/Banner.jpg')}
+      source={require("../assets/images/Banner.jpg")}
       style={styles.backgroundImage}
       resizeMode="cover"
     >
@@ -56,10 +71,15 @@ const Login = () => {
 
       {/* Header */}
       <HeaderCenter headerTitle="Kusina Delights" />
+      {loading && (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#F8D64E" />
+        </View>
+      )}
 
       <KeyboardAvoidingView
         style={styles.mainContainer}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         {/* Login Card */}
         <View style={styles.loginCard}>
@@ -81,7 +101,11 @@ const Login = () => {
             value={password}
             onChangeText={setPassword}
           />
-          <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+          <TouchableOpacity
+            style={[styles.loginButton, isDisabled && { opacity: 0.6 }]}
+            onPress={handleLogin}
+            disabled={loading || isDisabled}
+          >
             <Text style={styles.loginButtonText}>Login</Text>
           </TouchableOpacity>
         </View>
@@ -90,15 +114,15 @@ const Login = () => {
         <View style={styles.signUpCard}>
           <View style={styles.signUpHeader}>
             <Image
-              source={require('../assets/images/KusinaDelightsLogo.png')}
+              source={require("../assets/images/KusinaDelightsLogo.png")}
               style={styles.cardLogo}
               resizeMode="contain"
             />
             <Text style={styles.signUpTitle}>Join Kusina Delights</Text>
           </View>
           <Text style={styles.signUpText}>
-            Don't have an account? 
-            {'\n'}
+            Don't have an account?
+            {"\n"}
             Sign up to discover new recipes and delights!
           </Text>
           <TouchableOpacity style={styles.signUpButton} onPress={handleSignUp}>
@@ -109,7 +133,6 @@ const Login = () => {
 
       {/* Bottom Curved Container */}
       <View style={styles.bottomContainer} />
-
     </ImageBackground>
   );
 };
@@ -120,24 +143,24 @@ const styles = StyleSheet.create({
   // Full-screen background image
   backgroundImage: {
     flex: 1,
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   // Semi-transparent overlay on top of the background image
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: "rgba(0,0,0,0.4)",
   },
   mainContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 16,
   },
   // Login card styling
   loginCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    width: '80%',
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    width: "80%",
     borderRadius: 16,
     padding: 20,
     marginBottom: 20,
@@ -146,46 +169,46 @@ const styles = StyleSheet.create({
   },
   loginTitle: {
     fontSize: 22,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 15,
-    textAlign: 'center',
-    color: '#333',
+    textAlign: "center",
+    color: "#333",
   },
   input: {
-    backgroundColor: '#FFF',
+    backgroundColor: "#FFF",
     borderRadius: 8,
     padding: 12,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
     fontSize: 14,
-    color: '#333',
+    color: "#333",
   },
   loginButton: {
-    backgroundColor: '#F8D64E',
+    backgroundColor: "#F8D64E",
     padding: 14,
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
     boxShadow: "0px 2px 4px rgba(0,0,0,0.4)",
   },
   loginButtonText: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: "bold",
+    color: "#333",
   },
   // Sign-up card styling
   signUpCard: {
-    backgroundColor: '#F8D64E',
-    width: '80%',
+    backgroundColor: "#F8D64E",
+    width: "80%",
     borderRadius: 16,
     padding: 20,
-    alignItems: 'center',
+    alignItems: "center",
     elevation: 4,
     boxShadow: "0px 2px 4px rgba(0,0,0,0.4)",
   },
   signUpHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 10,
   },
   cardLogo: {
@@ -195,17 +218,17 @@ const styles = StyleSheet.create({
   },
   signUpTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#000',
+    fontWeight: "bold",
+    color: "#000",
   },
   signUpText: {
-    color: '#000',
+    color: "#000",
     fontSize: 16,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 10,
   },
   signUpButton: {
-    backgroundColor: '#FFF',
+    backgroundColor: "#FFF",
     borderRadius: 8,
     paddingVertical: 10,
     paddingHorizontal: 25,
@@ -213,18 +236,26 @@ const styles = StyleSheet.create({
   },
   signUpButtonText: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#000',
+    fontWeight: "bold",
+    color: "#000",
   },
   // Bottom curved container styling
   bottomContainer: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
     height: 80,
-    backgroundColor: '#F8D64E',
+    backgroundColor: "#F8D64E",
     borderTopLeftRadius: 50,
     borderTopRightRadius: 50,
+  },
+  loadingContainer: {
+    position: "absolute",
+    top: "45%",
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    zIndex: 10,
   },
 });

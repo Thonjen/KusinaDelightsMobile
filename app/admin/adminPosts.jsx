@@ -13,6 +13,8 @@ import AdminBottomNavbar from '../../components/AdminBottomNavbar';
 import AdminPostsHeader from '../../components/AdminPostsHeader';
 import Pagination from '../../components/Pagination';
 import * as database from '../../database/database';
+import { useLoading } from '../../contexts/LoadingContext';
+
 
 const AdminPosts = () => {
   const router = useRouter();

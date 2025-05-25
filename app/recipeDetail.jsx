@@ -119,7 +119,6 @@ export default function RecipeDetail() {
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <Image source={{ uri: recipe.image }} style={styles.image} />
-
         <View style={styles.authorRow}>
          <TouchableOpacity
            activeOpacity={0.7}

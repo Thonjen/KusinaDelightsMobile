@@ -19,6 +19,8 @@ import {
   getRecipes,
   removeReview,
 } from '../../database/database';
+import { useLoading } from '../../contexts/LoadingContext';
+
 
 const AdminReviews = () => {
   const router = useRouter();
@@ -91,13 +93,22 @@ const AdminReviews = () => {
           text: 'Delete',
           style: 'destructive',
           onPress: async () => {
-            await removeReview(id);
-            await loadReviews();
+            setLoading(true); // Start loading
+            try {
+              await removeReview(id);
+              await loadReviews();
+            } catch (error) {
+              console.error('Failed to delete review:', error);
+              // optionally show an error alert/toast
+            } finally {
+              setLoading(false); // End loading
+            }
           },
         },
       ]
     );
   };
+  
 
   const totalPages = Math.ceil(filtered.length / pageSize);
   const startIndex = (currentPage - 1) * pageSize;
